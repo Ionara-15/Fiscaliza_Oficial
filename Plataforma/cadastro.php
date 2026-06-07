@@ -1,3 +1,55 @@
+<?php
+session_start();
+require 'conexao.php';
+
+$erro = null;
+$sucesso = null;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nome = $_POST['nome'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    // 1. Validação simples para ver se as senhas batem
+    if ($password !== $confirm_password) {
+        $erro = "As senhas não coincidem. Tente novamente.";
+    } else {
+        // 2. Verifica se o e-mail já existe no banco de dados
+        $sqlVerifica = "SELECT id FROM usuarios WHERE email = :email";
+        $stmtVerifica = $pdo->prepare($sqlVerifica);
+        $stmtVerifica->execute(['email' => $email]);
+
+        if ($stmtVerifica->rowCount() > 0) {
+            $erro = "Este e-mail já está cadastrado. Vá para a tela de login.";
+        } else {
+            // 3. Se tudo estiver certo, insere o usuário no banco
+            // tipo_usuario = 1 significa que ele é um Cidadão/Aluno (Padrão)
+            $data_cadastro = date('Y-m-d'); // Pega a data de hoje no formato do MySQL
+            $tipo_usuario = 1; 
+
+            $sqlInsert = "INSERT INTO usuarios (nome_completo, email, senha, tipo_usuario, data_cadastro) VALUES (:nome, :email, :senha, :tipo, :data_cadastro)";
+            $stmtInsert = $pdo->prepare($sqlInsert);
+            
+            $inseriu = $stmtInsert->execute([
+                'nome' => $nome,
+                'email' => $email,
+                'senha' => $password, // Nota: Num ambiente real em produção, usaríamos password_hash()
+                'tipo' => $tipo_usuario,
+                'data_cadastro' => $data_cadastro
+            ]);
+
+            if ($inseriu) {
+                $sucesso = "Conta criada com sucesso! Redirecionando para o login...";
+                // Redireciona para o login após 2 segundos
+                header("refresh:2;url=login.php"); 
+            } else {
+                $erro = "Erro ao criar a conta. Tente novamente.";
+            }
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,176 +64,53 @@
         <div class="login-card">
             <div class="login-header">
                 <h2>Cadastrar</h2>
-                <p>Entre com seu Email e Senha</p>
+                <p>Crie sua conta para iniciar a jornada</p>
+                <?php if ($erro): ?>
+                    <b style="color: #ff3333; display: block; margin-top: 10px;"><?= $erro ?></b>
+                <?php endif; ?>
+                <?php if ($sucesso): ?>
+                    <b style="color: #28a745; display: block; margin-top: 10px;"><?= $sucesso ?></b>
+                <?php endif; ?>
             </div>
             
-            <form class="login-form" id="loginForm" novalidate>
+            <form class="login-form" method="POST" action="cadastro.php">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="nome" name="nome" required>
+                        <label for="nome">Nome Completo</label>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <div class="input-wrapper">
                         <input type="email" id="email" name="email" required autocomplete="email">
                         <label for="email">Email</label>
                     </div>
-                    <span class="error-message" id="emailError"></span>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-wrapper">
-                        <input type="name" id="nome" name="nome" required autocomplete="email">
-                        <label for="email">Nome Completo</label>
-                    </div>
-                    <span class="error-message" id="emailError"></span>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <input type="password" id="password" name="password" required autocomplete="new-password">
                         <label for="password">Senha</label>
-                        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
-                            <span class="eye-icon"></span>
-                        </button>
                     </div>
-                    <span class="error-message" id="passwordError"></span>
                 </div>
-
 
                 <div class="form-group">
                     <div class="input-wrapper password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="current-password">
-                        <label for="password">Confirmar senha</label>
-                        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
-                            <span class="eye-icon"></span>
-                        </button>
+                        <input type="password" id="confirm_password" name="confirm_password" required>
+                        <label for="confirm_password">Confirmar senha</label>
                     </div>
-                    <span class="error-message" id="passwordError"></span>
                 </div>
 
                 <button type="submit" class="login-btn">
                     <span class="btn-text">Cadastrar</span>
-                    <span class="btn-loader"></span>
                 </button>
             </form>
 
             <div class="signup-link">
                 <p>Tem conta? <a href="login.php">Entre</a></p>
             </div>
-
-            <div class="success-message" id="successMessage">
-                <div class="success-icon">✓</div>
-                <h3>Cadastrado com sucesso!</h3>
-                <p>Redirecionando para página de login...</p>
-            </div>
         </div>
     </div>
-
-    <script src="../../shared/js/form-utils.js"></script>
-    <script src="script.js"></script>
-    <script>
-      class BasicLoginForm {
-    constructor() {
-        this.form = document.getElementById('loginForm');
-        this.emailInput = document.getElementById('email');
-        this.passwordInput = document.getElementById('password');
-        this.passwordToggle = document.getElementById('passwordToggle');
-        this.successMessage = document.getElementById('successMessage');
-        
-        this.init();
-    }
-    
-    init() {
-        // Initialize shared utilities
-        FormUtils.addSharedAnimations();
-        FormUtils.setupFloatingLabels(this.form);
-        FormUtils.setupPasswordToggle(this.passwordInput, this.passwordToggle);
-        
-        // Add event listeners
-        this.form.addEventListener('submit', this.handleSubmit.bind(this));
-        this.emailInput.addEventListener('input', () => this.validateField('email'));
-        this.passwordInput.addEventListener('input', () => this.validateField('password'));
-        
-        // Add entrance animation
-        FormUtils.addEntranceAnimation(this.form.closest('.login-card'), 100);
-    }
-    
-    validateField(fieldName) {
-        const input = document.getElementById(fieldName);
-        const value = input.value.trim();
-        let validation;
-        
-        // Clear previous errors
-        FormUtils.clearError(fieldName);
-        
-        // Validate based on field type
-        if (fieldName === 'email') {
-            validation = FormUtils.validateEmail(value);
-        } else if (fieldName === 'password') {
-            validation = FormUtils.validatePassword(value);
-        }
-        
-        if (!validation.isValid && value !== '') {
-            FormUtils.showError(fieldName, validation.message);
-            return false;
-        } else if (validation.isValid) {
-            FormUtils.showSuccess(fieldName);
-            return true;
-        }
-        
-        return true;
-    }
-    
-    async handleSubmit(e) {
-        e.preventDefault();
-        
-        const email = this.emailInput.value.trim();
-        const password = this.passwordInput.value.trim();
-        
-        // Validate all fields
-        const emailValid = this.validateField('email');
-        const passwordValid = this.validateField('password');
-        
-        if (!emailValid || !passwordValid) {
-            FormUtils.showNotification('Please fix the errors below', 'error', this.form);
-            return;
-        }
-        
-        // Show loading state
-        const submitBtn = this.form.querySelector('.login-btn');
-        submitBtn.classList.add('loading');
-        
-        try {
-            // Simulate login process
-            await FormUtils.simulateLogin(email, password);
-            
-            // Show success state
-            this.showSuccess();
-            
-        } catch (error) {
-            // Show error notification
-            FormUtils.showNotification(error.message, 'error', this.form);
-        } finally {
-            // Remove loading state
-            submitBtn.classList.remove('loading');
-        }
-    }
-    
-    showSuccess() {
-        // Hide the form
-        this.form.style.display = 'none';
-        
-        // Show success message
-        this.successMessage.classList.add('show');
-        
-        
-        setTimeout(() => {
-            FormUtils.showNotification('Redirecting to dashboard...', 'success', this.successMessage);
-        }, 2000);
-    }
-}
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    new BasicLoginForm();
-});
-    </script>
-    
 </body>
 </html>
