@@ -47,10 +47,11 @@ body {
     color: #64748b;
     font-size: 0.875rem;
 }
+
 ul {
     color: #64748b;
-    
 }
+
 /* Form Styles */
 .form-group {
     margin-bottom: 20px;
@@ -66,7 +67,7 @@ ul {
     background: white;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
-    padding: 12px 16px 8px 16px;
+    padding: 16px; /* Ajustado para dar mais respiro */
     color: #1e293b;
     font-size: 16px;
     transition: all 0.2s ease;
@@ -80,13 +81,15 @@ ul {
 
 .input-wrapper label {
     position: absolute;
-    left: 16px;
-    top: 12px;
+    left: 12px; /* Ajustado */
+    top: 16px; /* Ajustado para centralizar */
     color: #64748b;
     font-size: 16px;
     transition: all 0.2s ease;
     pointer-events: none;
     transform-origin: left top;
+    background-color: white; /* Corrigindo o bug da borda */
+    padding: 0 6px; /* Espaço para a letra não colar */
 }
 
 .input-wrapper input:focus,
@@ -98,7 +101,7 @@ ul {
 .input-wrapper input:focus + label,
 .input-wrapper input:valid + label,
 .input-wrapper input.has-value + label {
-    transform: translateY(-8px) scale(0.875);
+    transform: translateY(-26px) scale(0.875); /* Empurrado mais para cima */
     color: #4aaf36;
     font-weight: 500;
 }

@@ -1,4 +1,17 @@
-<?php require 'trava.php'; ?>
+<?php
+require 'trava.php'; // Garante que só aluno logado veja
+require 'conexao.php'; // Conecta ao banco
+
+$id_usuario = $_SESSION['usuario_id'];
+
+// Busca o progresso atual do aluno na tabela status_videos
+$stmt = $pdo->prepare("SELECT n_videos FROM status_videos WHERE id_usuarios = :id");
+$stmt->execute(['id' => $id_usuario]);
+$status = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Se não tiver progresso, começa no vídeo 1
+$progresso = $status ? $status['n_videos'] : 1;
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -144,7 +157,7 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">(Nome do Usuário)</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $primeiro_nome; ?></span>
                                 <img class="img-profile rounded-circle"
                                     src="img/perfil.png">
                             </a>
@@ -183,22 +196,27 @@
 
                         <!-- Grow In Utility -->
                         <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="card shadow h-100">
-                                
-                                <a href="videos_detalhes.php">
-                                    <img src="img/capa.png" class="card-img-top" alt="Capa do Módulo Educação Fiscal" style="height: 200px; object-fit: cover;">
-                                </a>
-                                
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title font-weight-bold text-gray-800 mb-2">Educação Fiscal na Prática</h5>
-                                    <p class="card-text text-gray-600 mb-4 small">Aprenda os conceitos básicos sobre a arrecadação de tributos, a aplicação dos recursos públicos e como você pode atuar na fiscalização da sua cidade.</p>
-                                    
-                                    <a href="videos_detalhes.php" class="btn btn-primary mt-auto">
-                                        <i class="fas fa-play mr-2"></i>Acessar Módulo
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+    <div class="card shadow h-100">
+        
+        <img src="img/capa.png" class="card-img-top" alt="Capa da Aula 2" style="height: 200px; object-fit: cover;">
+        
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title font-weight-bold text-gray-800 mb-2">Aula 2: O Preço da Civilização</h5>
+            <p class="card-text text-gray-600 mb-4 small">Descubra para onde vai o dinheiro e como os serviços públicos são financiados.</p>
+            
+            <?php if ($progresso >= 2): ?>
+                <a href="aula_2.php" class="btn btn-primary mt-auto">
+                    <i class="fas fa-play mr-2"></i>Acessar Aula 2
+                </a>
+            <?php else: ?>
+                <button class="btn btn-secondary mt-auto" style="cursor: not-allowed; opacity: 0.7;">
+                    <i class="fas fa-lock mr-2"></i>Aula Bloqueada
+                </button>
+            <?php endif; ?>
+
+        </div>
+    </div>
+</div>
 
                     </div>
 

@@ -1,4 +1,10 @@
-<?php require 'trava.php'; ?>
+<?php
+require 'trava.php';
+
+// Pega o nome completo da sessão e separa para usarmos só o primeiro nome
+$nome_partes = explode(' ', $_SESSION['usuario_nome']);
+$primeiro_nome = $nome_partes[0];
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -142,7 +148,7 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">(Nome do Usuário)</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $primeiro_nome; ?></span>
                                 <img class="img-profile rounded-circle"
                                     src="img/perfil.png">
                             </a>
@@ -174,7 +180,7 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">BEM-VINDO(A) (nome do usuário - cidadão)!</h1>
+                        <h1 class="h3 mb-0 text-gray-800">BEM-VINDO(A) <?php echo strtoupper($primeiro_nome); ?>!</h1>
                         
                         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm" style="cursor: not-allowed; opacity: 0.8;" title="Conclua todas as etapas para liberar">
                             <i class="fas fa-lock fa-sm text-white-50 mr-1"></i> Certificado Bloqueado

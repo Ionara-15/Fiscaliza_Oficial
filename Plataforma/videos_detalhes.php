@@ -1,4 +1,31 @@
-<?php require 'trava.php'; ?>
+<?php
+require 'trava.php'; // Proteção
+require 'conexao.php'; // Banco de dados
+
+// 1. Pega o ID do vídeo na URL (ex: videos_detalhes.php?id=1)
+$video_id = isset($_GET['id']) ? intval($_GET['id']) : 1;
+
+// 2. Busca os dados desse vídeo específico no banco
+$stmt = $pdo->prepare("SELECT * FROM videos WHERE id = :id");
+$stmt->execute(['id' => $video_id]);
+$video = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 3. Verifica se o vídeo existe
+if (!$video) {
+    header("Location: videos.php");
+    exit;
+}
+
+// 4. Verificação de Progresso (Segurança para o cadeado)
+$stmtProgresso = $pdo->prepare("SELECT n_videos FROM status_videos WHERE id_usuarios = :id");
+$stmtProgresso->execute(['id' => $_SESSION['usuario_id']]);
+$status = $stmtProgresso->fetch(PDO::FETCH_ASSOC);
+
+if ($status['n_videos'] < $video_id) {
+    header("Location: videos.php"); // Se ele tentar pular aula, volta pro índice
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 
